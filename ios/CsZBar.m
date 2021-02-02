@@ -8,6 +8,7 @@
 @property bool scanInProgress;
 @property NSString *scanCallbackId;
 @property AlmaZBarReaderViewController *scanReader;
+@property (strong, nonatomic) UITapGestureRecognizer *tapOutsideRecognizer;
 
 @end
 
@@ -108,7 +109,7 @@
 
             self.scanReader.cameraOverlayView = polygonView;
         }
-
+        [self.viewController.view.window addGestureRecognizer:self.tapBehindGesture];
         [self.viewController presentViewController:self.scanReader animated:YES completion:nil];
     }
 }
@@ -176,6 +177,32 @@
                                 resultWithStatus: CDVCommandStatus_ERROR
                                 messageAsString: @"Failed"]];
     }];
+}
+
+- (UITapGestureRecognizer*)tapBehindGesture
+{
+    if (_tapOutsideRecognizer == nil)
+    {
+        _tapOutsideRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapBehindRecognized)];
+        _tapOutsideRecognizer.numberOfTapsRequired = 1;
+        _tapOutsideRecognizer.cancelsTouchesInView = NO;
+        _tapOutsideRecognizer.delegate = self;
+    }
+
+    return _tapOutsideRecognizer;
+}
+
+-(void)tapBehindRecognized {
+    [self.viewController.view.window removeGestureRecognizer:self.tapBehindGesture];
+    self.scanInProgress = NO;
+    //[self sendScanResult: [CDVPluginResult
+    //                        resultWithStatus: CDVCommandStatus_ERROR
+    //                        messageAsString: @"cancelled"]];
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer
+{
+    return YES;
 }
 
 @end
